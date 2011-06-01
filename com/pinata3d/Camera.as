@@ -3,9 +3,9 @@ package com.pinata3d
 	import flash.geom.Matrix3D;
 	import flash.geom.Vector3D;
  
-	public class Camera
+	public class Camera extends Entity
 	{
-		private var _projection:Matrix3D;
+		public var _projection:Matrix3D;
 		public var _view:Matrix3D;
 		private var _viewproj:Matrix3D;
 		
@@ -41,6 +41,7 @@ package com.pinata3d
 			_projection = perspectiveProjection();
 		}
 		
+		/*
 		public function lookat(at:Vector3D):void 
 		{
 			_position = _view.position;
@@ -72,8 +73,6 @@ package com.pinata3d
 			return new Vector3D();
 		}
 		
-		
-		
 		public function _precalc():void 
 		{
 				_viewproj = _projection;
@@ -88,6 +87,7 @@ package com.pinata3d
 		{
 			return _viewproj;
 		}
+		*/
 		
 		protected function perspectiveProjection(fov:Number=90,
 			aspect:Number=1, near:Number=1, far:Number=2048):Matrix3D {
