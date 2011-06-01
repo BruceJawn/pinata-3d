@@ -13,11 +13,15 @@ package com.pinata3d
 	import flash.display3D.VertexBuffer3D;
 	import flash.geom.Matrix3D;
 	import flash.display.Bitmap;
+	
+	import com.pinata3d.Molehill_obj_parser;
  
 	public class Mesh
 	{
 		//This will be where our VertexData will be stored
 		private var vertexBuffer:VertexBuffer3D;
+		private var rgbBuffer:VertexBuffer3D;
+		private var mesh_has_rgb_in_another_buffer:Boolean = false;
 		
 		//This will define what order Vertices should be drawn
 		private var indexBuffer:IndexBuffer3D;
@@ -28,10 +32,23 @@ package com.pinata3d
 		
 		public function Mesh()
 		{
-			
-			
 		}
 		
+		/**
+		* Creates mesh from an OBJ file
+		*/
+		static public function createOBJ(obj_data:Class, scale:Number = 1, data_is_zxy:Boolean = false, texture_flip:Boolean = false):Mesh
+		{
+			var mesh:Mesh = new Mesh();
+			trace("createOBJ is parsing OBJ data...");
+			var objmesh:Molehill_obj_parser = new Molehill_obj_parser(obj_data, Pinata.context, scale, data_is_zxy, texture_flip);			
+			mesh.vertexBuffer = objmesh.positionsBuffer;
+			mesh.indexBuffer = objmesh.indexBuffer;
+			mesh.rgbBuffer = objmesh.colorsBuffer;
+			mesh.mesh_has_rgb_in_another_buffer = true; 
+			return mesh;
+		}
+
 		/**
 		* Creates mesh from 1 image
 		*/
@@ -78,9 +95,7 @@ package com.pinata3d
 						idx.push(n_vtx, n_vtx + 1, n_vtx + 2);
 						n_vtx += 3;
 						n_idx += 3;
-						trace("d: " + tx + " [ " + x + " , " + y + " , " + z + " ]: " + r + " " + g + " " + b);
-						
-						
+						//trace("d: " + tx + " [ " + x + " , " + y + " , " + z + " ]: " + r + " " + g + " " + b);
 					}
 				}
 			}
@@ -104,7 +119,10 @@ package com.pinata3d
 		public function render(context:Context3D):void 
 		{
 			context.setVertexBufferAt(0, vertexBuffer, 0, Context3DVertexBufferFormat.FLOAT_3);
-			context.setVertexBufferAt(1, vertexBuffer, 3, Context3DVertexBufferFormat.FLOAT_3);
+			if (!mesh_has_rgb_in_another_buffer)
+				context.setVertexBufferAt(1, vertexBuffer, 3, Context3DVertexBufferFormat.FLOAT_3);
+			else
+				context.setVertexBufferAt(1, rgbBuffer, 0, Context3DVertexBufferFormat.FLOAT_3);
 			context.drawTriangles(indexBuffer, 0, -1);
 			//trace("mesh renders!");
 		}

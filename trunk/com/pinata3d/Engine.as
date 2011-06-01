@@ -136,9 +136,9 @@ package  com.pinata3d
 			
 			update();
 			
-			Pinata.camera._precalc();
+			//Pinata.camera._precalc();
 			
-			for each (var entity:Entity in _entities) entity.render();
+			for each (var entity:Entity in _entities) entity.render(Pinata.camera.transform, Pinata.camera._projection);
 			
 			//Show those triangles on screen
 			context3d.present();
