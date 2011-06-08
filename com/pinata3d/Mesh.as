@@ -2,6 +2,7 @@ package com.pinata3d
 {
 	import com.adobe.utils.AGALMiniAssembler;
 	import flash.utils.ByteArray;
+	import org.flashdevelop.utils.FlashConnect;
  
 	import flash.display.Stage3D;
 	import flash.display3D.Context3D;
@@ -26,9 +27,11 @@ package com.pinata3d
 		//This will define what order Vertices should be drawn
 		private var indexBuffer:IndexBuffer3D;
 		
-		private var _dx:int; // dimensions
-		private var _dy:int;
-		private var _dz:int;
+		private var _sx:int; // dimensions
+		private var _sy:int;
+		private var _sz:int;
+		
+		public static var MASK:uint = 0x00ff00ff; // magenta, magic pink, the false colour
 		
 		public function Mesh()
 		{
@@ -48,16 +51,111 @@ package com.pinata3d
 			mesh.mesh_has_rgb_in_another_buffer = true; 
 			return mesh;
 		}
+		
+		static public function omg(val:uint, shift:uint):uint
+		{
+			// srsly... (short name is for quick lookup)
+			var oldvar:uint = val;
+			val <<= shift >> 1;
+			val |= val >> 3;
+			val &= 7;
+			if ((shift & 4)==0) val = (~(val ^ (((val >> 2) ^ (val & 1)) ? 6 : 0 ))) & 7;
+			trace(oldvar, shift, "=", val);
+			return val;
+		}
+		
+		static public function createVoxbox(vox:Voxbox):Mesh
+		{
+			// optimisation reminder
+			var vtx:Vector.<Number> = new Vector.<Number>();
+			var idx:Vector.<uint> = new Vector.<uint>();
+			var n_idx:uint, n_vtx:uint;
+			n_idx = 0;
+			n_vtx = 0;
+			var mesh:Mesh = new Mesh();
+			mesh._sx = vox.sx;
+			mesh._sz = vox.sy;
+			mesh._sy = vox.sz;
+			for (var x:int = 0; x < vox.sx; x++)
+			{
+				for (var y:int = 0; y < vox.sy; y++)
+				{
+					for (var z:int = 0; z < vox.sz; z++)
+					{
+						if (vox.mask(x, y, z)) continue;
+						var col:uint = vox.getAt(x, y, z);
+						var r:Number = ((col & 0x00ff0000) >> 16) / 255.0,
+							g:Number = ((col & 0x0000ff00) >> 8) / 255.0,
+							b:Number = ((col & 0x000000ff)) / 255.0;
+						
+						// it's time for some MAD as3
+						
+						// this adds some redundant verts, but the process is simpler.
+						// constructing vert cube
+						for (var c:uint = 0; c < 8; c++)
+						{
+							// cube has 8 verts, that are represented using 3 bits
+							var bx:Number = c >> 2,
+								by:Number = (c >> 1) & 1, 
+								bz:Number = c & 1;
+							//trace(bx, by, bz);
+							vtx.push(x + bx, y + by, z + bz, bx, by, bz);
+						}
+						
+						for (var c:uint = 0; c < 6; c++)
+						{
+							var ax:Vector.<int> = new Vector.<int>();
+							
+							ax.push(0, 0, 0);
+							ax[c >> 1] = (c & 1) ? 1 : -1;
+							if (vox.mask(x + ax[0], y + ax[1], z + ax[2]))
+							{
+								var ix:Vector.<uint> = new Vector.<uint>();
+								if (c == 0) ix.push(0, 3, 2, 0, 1, 3);
+								if (c == 1) ix.push(7, 4, 6, 7, 5, 4);
+								if (c == 2) ix.push(0, 5, 1, 0, 4, 5);
+								if (c == 3) ix.push(7, 2, 3, 7, 6, 2);
+								if (c == 4) ix.push(0, 6, 4, 0, 2, 6);
+								if (c == 5) ix.push(7, 1, 5, 7, 3, 1);
+								
+								for each (var i:uint in ix) idx.push(n_vtx + i);
+								/*
+								idx.push(n_vtx + omg(0, c), n_vtx + omg(2, c), n_vtx + omg(3, c), 
+										 n_vtx + omg(0, c), n_vtx + omg(3, c), n_vtx + omg(1, c));
+								*/
+								n_idx += 6;
+							}
+						}
+						n_vtx += 8;
+						
+						
+						
+					}
+				}
+			}
+			//for each (var a:uint in idx) trace(a);
+			trace("Created mesh size: " + n_idx + "/" + n_vtx);
+			mesh.vertexBuffer = Pinata.context.createVertexBuffer(n_vtx, 6);
+			mesh.indexBuffer=Pinata.context.createIndexBuffer(n_idx);
+			//send our vertex data to the the vertex buffer
+			mesh.vertexBuffer.uploadFromVector(vtx, 0,n_vtx);
+			
+			//send our index data to the index buffer
+			mesh.indexBuffer.uploadFromVector(idx, 0, n_idx);
+			
+			return mesh;
+		}
 
 		/**
 		* Creates mesh from 1 image
 		*/
+		/*
 		static public function create1(image:Class):Mesh
 		{
 			
 			// do these really need names more than that?
 			var vtx:Vector.<Number> = new Vector.<Number>();
-			var idx:Vector.<uint> = new Vector.<uint>();;
+			var idx:Vector.<uint> = new Vector.<uint>();
 			var n_idx:uint, n_vtx:uint;
 			n_idx = 0;
 			n_vtx = 0;
@@ -112,6 +210,7 @@ package com.pinata3d
 			return mesh;
 			
 		}
+		*/
 		
 		/**
 		* Renders this mesh
@@ -128,3 +227,6 @@ package com.pinata3d
 		}
 	}
 }
+
+
+

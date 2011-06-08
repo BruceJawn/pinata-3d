@@ -53,8 +53,8 @@ package com.pinata3d
 				_x = e.stageX;
 				_y = e.stageY;
 			}
-			_rx += e.stageX - _x;
-			_ry += e.stageY - _y;
+			_rx = e.stageX - _x;
+			_ry = e.stageY - _y;
 			_x = e.stageX;
 			_y = e.stageY;
 			

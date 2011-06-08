@@ -137,8 +137,13 @@ package  com.pinata3d
 			update();
 			
 			//Pinata.camera._precalc();
-			
-			for each (var entity:Entity in _entities) entity.render(Pinata.camera.transform, Pinata.camera._projection);
+			if (Pinata.use_debug_camera)
+			{
+				Pinata.debug_camera.getInput();
+				for each (var entity:Entity in _entities) entity.render(Pinata.debug_camera.transform, Pinata.debug_camera._projection);
+			} else {
+				for each (var entity:Entity in _entities) entity.render(Pinata.camera.transform, Pinata.camera._projection);
+			}
 			
 			//Show those triangles on screen
 			context3d.present();
