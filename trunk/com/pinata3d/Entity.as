@@ -524,6 +524,14 @@ package com.pinata3d
 			_transformNeedsUpdate = true; // force update
 		}
 
+		public function translate(vec:Vector3D):void
+		{
+		  	_x += vec.x;
+			_y += vec.y;
+			_z += vec.z;
+			_transformNeedsUpdate = true;
+		}
+		
 		// create an exact duplicate in the game world
 		// whle re-using all Molehill objects
 		public function clone():Entity
@@ -545,6 +553,7 @@ package com.pinata3d
 			myclone.updateValuesFromTransform();
 			return myclone;
 		}
+		
 		/**
 		* renders this entity
 		*/
@@ -553,7 +562,7 @@ package com.pinata3d
 		{
 			// only render if these are set
 			if (!_mesh) return;
-			
+			view.invert();
 			//Reset our matrix
 			matrix.identity();
 			matrix.append(transform);
@@ -561,9 +570,10 @@ package com.pinata3d
 			matrix.append(view);
 			matrix.append(projection);
 			
-			// Set the vertex program register vc0 to our model matrix
-			Pinata.context.setProgramConstantsFromMatrix(
-				Context3DProgramType.VERTEX, 0, matrix, true);
+			//matrix.append(Pinata.camera.viewproj);
+			//Here are saying vc0 will be our model matrix
+			//and it will be effecting our vertex data
+			Pinata.context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 0, matrix,true);
 			
 			// set the render state
 			Pinata.context.setBlendFactors(blend_src, blend_dst);

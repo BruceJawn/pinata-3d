@@ -1,18 +1,3 @@
-////////////////////////////////
-// Pinata3d - www.pinata3d.com
-////////////////////////////////
-
-////////////////////////////////
-// Example Game
-// by Sos and Mcfunkypants
-////////////////////////////////
-// This example is meant to be a
-// good starting point for the
-// creation of your own games.
-// The Pinata3d engine resides
-// in the /com/pinata3d/ folder.
-////////////////////////////////
-
 package
 {
 	import com.pinata3d.Engine;
@@ -21,60 +6,57 @@ package
 	import com.pinata3d.Mouse;
 	import com.pinata3d.Mesh;
 	import com.pinata3d.Entity;
-	import com.pinata3d.Game_timer;
+	import com.pinata3d.Voxbox;
 	import flash.geom.Vector3D;
 
 	public class Main extends Engine
 	{
 		
-		public var time:Number = 6000; // so we see it right away
-		//private var triangle:Entity;
-		private var timer:Game_timer;
+		public var time:Number = 0;
+		private var triangle:Entity;
 		
-		[Embed(source = 'gfx/tree.png')]
-		private const TREE:Class;
+		[Embed(source = 'gfx/hut_front.png')]
+		private const FRONT:Class;
 		
-		[Embed(source = 'gfx/terrain.obj', 
-		mimeType = 'application/octet-stream')]
-		private const TERRAINDATA:Class;
-
+		[Embed(source = 'gfx/hut_side.png')]
+		private const SIDE:Class;
+		
 		public function Main()
 		{
 			super(800, 600, 0);
 		}
 		
-		// only run once per second
-		public function heartbeat():void
-		{
-			trace(timer.game_elapsed_time+'ms');
-		}
-		
 		override public function init():void
 		{
-			// add a new entity to the world
-			// creates all geometry from an image
-			add(new Entity(Mesh.create1(TREE)));
+			add(new Entity(Mesh.createVoxbox(Voxbox.createDouble(FRONT,SIDE))));
 			
-			// add another entity to the world
-			// creates all geometry from an .OBJ file
-			add(new Entity(Mesh.createOBJ(TERRAINDATA)));
-			
-			// create a timer that measures 
-			// elapsed time between frames
-			timer = new Game_timer(heartbeat);
-			
-			// set up the camera projection matrix
-			Pinata.camera.projection(.1,4096,40);
-			
+			Pinata.debug_camera.identity();
+			Pinata.use_debug_camera = false;
+			Pinata.debug_camera.position = new Vector3D(20, 20, 20);
+			Pinata.debug_camera.lookAt(new Vector3D(0, 0, 0));
 		}
 		
 		override public function update():void
 		{
-			timer.tick();
-			time += timer.frame_ms;
+			time += .1;
 			
-			Pinata.camera.position = new Vector3D(Math.cos(time/2000) * 20, -10, Math.sin(time/2000) * 20);
-		
+			//
+			Pinata.debug_camera.getInput();
+			Pinata.camera.identity();
+			Pinata.camera.projection(.1, 4096, 40);
+			//Pinata.camera.rotationDegreesY = -20;
+			//Pinata.camera.position = new Vector3D(Math.cos(time) * 20, 20, Math.sin(time) * 20);
+			Pinata.camera.position = Pinata.debug_camera.position;
+			Pinata.camera.rotationDegreesY = Pinata.debug_camera.rotationDegreesY;
+			Pinata.camera.rotationDegreesZ = Pinata.debug_camera.rotationDegreesZ;
+			//Pinata.camera.lookAt(new Vector3D(0, 0, 0));
+			//Junk.camera.position = new Vector3D(0,0,10);
+			//trace(Pinata.debug_camera.pos_string());
+			
+			
+			//Junk.camera.lookat(new Vector3D(1, 1, 1));
+			
+			
 		}
 	}
 }
